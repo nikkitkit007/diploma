@@ -1,14 +1,12 @@
 model: resnet
 
-# Parameters
-# Taken from the paper
 population_size: 400
 scale_factor: 0.5
 num_iterations: 100
 num_perturbations: 1
 
 confidence: 0.5
-max_proc: 8
+max_proc: 4
 
 input_dir: images/cifar10/test/
 output_dir: images/output/
