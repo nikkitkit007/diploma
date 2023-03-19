@@ -94,7 +94,6 @@ if __name__ == "__main__":
     CONFIG = yaml.safe_load(open(args.config_file))
     model = get_model_from_name(CONFIG["model"])
     CONFIG["img_x"], CONFIG["img_y"], CONFIG["img_channels"] = model.input_size
-    print('\n------->>>>', args.input_image)
     image_arr = get_image_array(args.input_image, config=CONFIG)
     name = args.input_image.split('/')[-1]
 
