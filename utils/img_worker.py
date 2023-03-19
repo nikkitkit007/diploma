@@ -2,8 +2,10 @@ import cv2
 import numpy as np
 from typing import Tuple
 
-origin_dataset_path = "/home/nikita/Desktop/one-pixel-attack-master/cifar10/test/"
-broken_dataset_path = "/home/nikita/Desktop/one-pixel-attack-master/output/"
+from configurations import CONFIG
+
+origin_dataset_path = "/home/nikita/Desktop/one-pixel-attack-master/"+CONFIG["input_dir"]
+broken_dataset_path = "/home/nikita/Desktop/one-pixel-attack-master/"+CONFIG["output_dir"]
 
 
 def compare(img1, img2):
@@ -33,5 +35,8 @@ if __name__ == '__main__':
     img_name = "1335.png"
     # img_name = "11774.png"
     # img_name = "12195.png"
-
+    im = cv2.imread(broken_dataset_path+img_name)
+    cv2.imshow("lol" ,im)
+    cv2.waitKey(1)
+    res = outlier_detector.z_score(broken_dataset_path+img_name, 3)
     print(find_diff_px(img_name))

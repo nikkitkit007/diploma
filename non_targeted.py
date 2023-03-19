@@ -12,7 +12,7 @@ from one_pixel_attack.common import get_image_array, get_probability_for_class, 
 from one_pixel_attack.differential_evolution import init_population, gen_children
 from models.base import get_model_from_name
 
-config_file = "config.yaml"
+config_file = "configurations/config.yaml"
 CONFIG = yaml.safe_load(open(config_file))
 model = get_model_from_name(CONFIG["model"])
 CONFIG["img_x"], CONFIG["img_y"], CONFIG["img_channels"] = model.input_size
