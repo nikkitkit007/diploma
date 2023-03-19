@@ -8,5 +8,6 @@ num_iterations: 100
 num_perturbations: 1
 
 confidence: 0.5
+max_proc: 8
 
 output_dir: images/output/
