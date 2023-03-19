@@ -1,0 +1,8 @@
+numpy~=1.24.2
+keras~=2.11.0
+ipython~=8.11.0
+imageio~=2.26.0
+PyYAML~=6.0
+mtcnn~=0.1.1
+tensorflow~=2.11.0
+opencv-python==4.5.5.64
