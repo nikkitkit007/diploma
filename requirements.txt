@@ -6,3 +6,4 @@ PyYAML~=6.0
 mtcnn~=0.1.1
 tensorflow~=2.11.0
 opencv-python==4.5.5.64
+scipy

@@ -1,9 +1,17 @@
 import cv2
 from outlier_detector import *
+import os
 
 from utils.img_worker import find_diff_px
 from utils.heatmap import get_heatmap, get_outliers
 from configurations import broken_dataset_path, origin_dataset_path
+import fixers.interpolate as interpolate
+
+
+def calc_dist(bgr1, bgr2):
+    dist = ((int(bgr1[0]) - int(bgr2[0])) ** 2 + (int(bgr1[1]) - int(bgr2[1])) ** 2 + (
+                int(bgr1[2]) - int(bgr2[2])) ** 2) ** 0.5
+    return dist
 
 
 def find_min_pixels_count(method, data, m1, m2, max_iterations=15):
@@ -35,21 +43,20 @@ def heatmap(img):
 
 if __name__ == '__main__':
     img_name = "1335.png"
+    interpolate.main()
+
     # img_name = "11774.png"
     # img_name = "12195.png"
-    broken_img = cv2.imread(broken_dataset_path + img_name)
-    origin_img = cv2.imread(origin_dataset_path + img_name)
-    # heatmap(img=im)
-
-    # cv2.imshow("lol", im)
+    # img_name = "159193.png"
+    # broken_img = cv2.imread(broken_dataset_path + img_name)
+    # origin_img = cv2.imread(origin_dataset_path + img_name)
+    #
+    # # # heatmap(img=im)
+    # #
+    # cv2.imshow("lol", broken_img)
     # cv2.waitKey(0)
     # cv2.destroyAllWindows()
-    # mean = find_min_pixels_count(outlier_detector.z_score, broken_dataset_path + img_name, 0, 100)
-    # print(mean)
-    # res = outlier_detector.z_score(broken_dataset_path + img_name, mean)
-    # print(res)
-    x, y = find_diff_px(img_name)
-    bgr = origin_img[x][y]          # BGR (b, g, r)
-
-    print(f"xy: {x, y}\t BGR: {bgr}")
-
+    # # mean = find_min_pixels_count(outlier_detector.z_score, broken_dataset_path + img_name, 0, 100)
+    # # print(mean)
+    # # res = outlier_detector.z_score(broken_dataset_path + img_name, mean)
+    # # print(res)
