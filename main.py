@@ -7,11 +7,10 @@ from utils.heatmap import get_heatmap, get_outliers
 from configurations import broken_dataset_path, origin_dataset_path
 import fixers.interpolate as interpolate
 
-
-def calc_dist(bgr1, bgr2):
-    dist = ((int(bgr1[0]) - int(bgr2[0])) ** 2 + (int(bgr1[1]) - int(bgr2[1])) ** 2 + (
-                int(bgr1[2]) - int(bgr2[2])) ** 2) ** 0.5
-    return dist
+methods = {"mehalanobis": {"score": 0, "method": calculate_map_mehalanobis_distance},
+           "outlier_detection": {"score": 0, "method": calculate_map_outlier_detection},
+           "z_score": {"score": 0, "method": calculate_map_z_score},
+           "histogram": {"score": 0, "method": calculate_map_histogram}}
 
 
 def find_min_pixels_count(method, data, m1, m2, max_iterations=15):
@@ -38,13 +37,29 @@ def heatmap(img):
     for m in methods:
         heatmap = get_heatmap(img, m)
         cv2.imwrite(str(m) + '_heatmap.png', heatmap)
-        print(get_outliers(img, m, 99))
+
+
+def outliers(img, broken_px):
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+    for name, method in methods.items():
+        potential_px = get_outliers(img, method['method'], 99)
+        if broken_px in potential_px:
+            methods[name]['score'] += 1
 
 
 if __name__ == '__main__':
-    img_name = "1335.png"
-    interpolate.main()
+    # interpolate.main()          # run interpolate funcs to calculate statistic
 
+    img_name_list = os.listdir(broken_dataset_path)
+    total_img = len(img_name_list)
+
+    for img in img_name_list:
+        broken_img = cv2.imread(broken_dataset_path + img)
+        broken_px = find_diff_px(img)
+        outliers(broken_img, broken_px)
+
+    print([{'name': name, 'score': round(method['score']/total_img, 4)} for name, method in methods.items()])
     # img_name = "11774.png"
     # img_name = "12195.png"
     # img_name = "159193.png"

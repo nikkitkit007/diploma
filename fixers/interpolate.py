@@ -193,7 +193,7 @@ class Interpolator:
 
 
 def main():
-    img_name_list = os.listdir(broken_dataset_path)[:2]
+    img_name_list = os.listdir(broken_dataset_path)
     results = {"nearest_neighbor": 0,
                "bilinear": 0,
                "bicubic": 0,
