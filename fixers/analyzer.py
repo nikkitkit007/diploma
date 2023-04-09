@@ -62,7 +62,7 @@ def analyze(methods: List[Method], img_names: List[str]):
             for i, d in enumerate(dist):
                 dist_rating[d] = i
             for rate, method in enumerate(methods):
-                method['score'] += dist_rating[method['name']]
+                method['score'] += len(methods) - dist_rating[method['name']]
         except:
             pass
 
@@ -75,6 +75,9 @@ def analyze(methods: List[Method], img_names: List[str]):
 
     for method in methods:
         method['time'] = round(method['time'] / total_img_count, 10)
+
+    for method in methods:
+        method['score'] = method['score'] / 1000
 
 
 def print_top(data: List[Method], key: str, reverse=False):
