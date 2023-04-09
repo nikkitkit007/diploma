@@ -1,6 +1,7 @@
 from typing import NamedTuple, Dict, List
 import os
 import cv2
+import time
 
 from configurations import broken_dataset_path, origin_dataset_path
 from utils.img_worker import find_diff_px
@@ -14,17 +15,18 @@ class Method(Dict):
     call: callable
     score: float
     quality: float
+    time: float
 
 
-interpolator_methods = [Method(name="nearest_neighbor", call=Interpolator.nearest_neighbor, score=0, quality=0),
-                        Method(name="bilinear", call=Interpolator.bilinear, score=0, quality=0),
-                        Method(name="bicubic", call=Interpolator.bicubic, score=0, quality=0),
-                        Method(name="lanczos", call=Interpolator.lanczos, score=0, quality=0),
-                        Method(name="custom", call=Interpolator.custom, score=0, quality=0), ]
+interpolator_methods = [Method(name="nearest_neighbor", call=Interpolator.nearest_neighbor, score=0, quality=0, time=0),
+                        Method(name="bilinear", call=Interpolator.bilinear, score=0, quality=0, time=0),
+                        Method(name="bicubic", call=Interpolator.bicubic, score=0, quality=0, time=0),
+                        Method(name="lanczos", call=Interpolator.lanczos, score=0, quality=0, time=0),
+                        Method(name="custom", call=Interpolator.custom, score=0, quality=0, time=0), ]
 
 
-inpaint_methods = [Method(name="navier_stokes", call=Inpainter.navier_stokes, score=0, quality=0),
-                   Method(name="telea", call=Inpainter.telea, score=0, quality=0), ]
+inpaint_methods = [Method(name="navier_stokes", call=Inpainter.navier_stokes, score=0, quality=0, time=0),
+                   Method(name="telea", call=Inpainter.telea, score=0, quality=0, time=0), ]
 
 
 avg_proc = {}
@@ -46,9 +48,14 @@ def analyze(methods: List[Method], img_names: List[str]):
         dist = {}
         try:
             for method in methods:
+                time_start = time.time()
                 method_dist = Interpolator.calc_dist(method['call'](broken_img, x, y), bgr_origin)
+                time_finish = time.time() - time_start
+
                 dist[method['name']] = method_dist
                 proc[method['name']] += method_dist
+                # time[method['name']]
+                method['time'] += time_finish
 
             dist = dict(sorted(dist.items(), key=lambda x: x[1]))
             dist_rating = {}
@@ -66,6 +73,16 @@ def analyze(methods: List[Method], img_names: List[str]):
     for method in methods:
         method['quality'] += proc[method['name']]
 
+    for method in methods:
+        method['time'] = round(method['time'] / total_img_count, 10)
+
+
+def print_top(data: List[Method], key: str, reverse=False):
+    print(f"\nTOP {key.upper()}:")
+    top = sorted(data, key=lambda x: x[key], reverse=reverse)
+    for method in top:
+        print(f"{method['name']} - {method[key]}")
+
 
 if __name__ == '__main__':
     img_names = os.listdir(broken_dataset_path)[:]
@@ -74,13 +91,11 @@ if __name__ == '__main__':
     analyze(methods=fix_methods, img_names=img_names)
 
     # -----------------------top score--------------------------
-    print("\nTOP SCORE")
-    top_score = sorted(fix_methods, key=lambda x: x['score'], reverse=True)
-    for method in top_score:
-        print(f"{method['name']} - {method['score']}")
+    print_top(data=fix_methods, key='score', reverse=True)
 
     # ----------------------top quality-------------------------
-    print("\nTOP QUALITY")
-    top_quality = sorted(fix_methods, key=lambda x: x['quality'], reverse=True)
-    for method in top_quality:
-        print(f"{method['name']} - {method['quality']}")
+    print_top(data=fix_methods, key='quality', reverse=True)
+
+    # ------------------------top time--------------------------
+    print_top(data=fix_methods, key='time', reverse=False)
+
