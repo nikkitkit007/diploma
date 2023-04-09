@@ -29,7 +29,6 @@ inpaint_methods = [Method(name="navier_stokes", call=Inpainter.navier_stokes, sc
                    Method(name="telea", call=Inpainter.telea, score=0, quality=0, time=0), ]
 
 
-avg_proc = {}
 proc = {}
 
 
@@ -87,7 +86,7 @@ def print_top(data: List[Method], key: str, reverse=False):
         print(f"{method['name']} - {method[key]}")
 
 
-if __name__ == '__main__':
+def main():
     img_names = os.listdir(broken_dataset_path)[:]
 
     fix_methods = inpaint_methods + interpolator_methods
@@ -102,3 +101,6 @@ if __name__ == '__main__':
     # ------------------------top time--------------------------
     print_top(data=fix_methods, key='time', reverse=False)
 
+
+if __name__ == '__main__':
+    main()
