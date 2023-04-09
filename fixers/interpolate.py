@@ -5,6 +5,9 @@ from configurations import broken_dataset_path, origin_dataset_path
 from utils.img_worker import find_diff_px
 
 
+proc = {}
+
+
 class Interpolator:
     # todo make all combinations
 
@@ -17,36 +20,25 @@ class Interpolator:
         bgr_origin = origin_img[x][y]  # BGR (b, g, r)
         bgr_broken = broken_img[x][y]  # BGR (b, g, r)
 
-        bicubic = Interpolator.bicubic(broken_img, x, y)
-        bilinear = Interpolator.bilinear(broken_img, x, y)
-        nearest_neighbor = Interpolator.nearest_neighbor(broken_img, x, y)
-        lanczos = Interpolator.lanczos(broken_img, x, y)
-        custom = Interpolator.custom(broken_img, x, y)
-
-        res = {"nearest_neighbor": nearest_neighbor,
-               "bilinear": bilinear,
-               "bicubic": bicubic,
-               "lanczos": lanczos,
-               "custom": custom}
-
         dist = {}
-        for key in res:
-            dist[key] = Interpolator.calc_dist(res[key], bgr_origin)
+        for name, method in interpolator.items():
+            dist[name] = Interpolator.calc_dist(method['method'](broken_img, x, y), bgr_origin)
+            proc[name] += Interpolator.calc_dist(method['method'](broken_img, x, y), bgr_origin)
+
         dist = dict(sorted(dist.items(), key=lambda x: x[1]))
-        print(f"\n\t<<<<{img_name}>>>>\n"
-              f"original px: {bgr_origin}\n"
-              f"nearest_neighbor: {nearest_neighbor}\n"
-              f"bilinear: {bilinear}\n"
-              f"bicubic: {bicubic}\n"
-              f"lanczos: {lanczos}\n"
-              f"custom: {custom}")
-        #
-        # print(f"\nTop of methods:\n{dist}")
+        # print(f"\n\t<<<<{img_name}>>>>\n"
+        #       f"original px: {bgr_origin}\n"
+        #       f"nearest_neighbor: {interpolator['nearest_neighbor']['method'](broken_img, x, y)}\n"
+        #       f"bilinear: {interpolator['bilinear']['method'](broken_img, x, y)}\n"
+        #       f"bicubic: {interpolator['bicubic']['method'](broken_img, x, y)}\n"
+        #       f"lanczos: {interpolator['lanczos']['method'](broken_img, x, y)}\n"
+        #       f"custom: {interpolator['custom']['method'](broken_img, x, y)}")
+
         return dist
 
     @staticmethod
     def nearest_neighbor(img, x: int, y: int) -> list:
-        restored_px = img[x-1][y-1]
+        restored_px = img[x - 1][y - 1]
         # img[x, y] = restored_px
 
         return restored_px
@@ -70,6 +62,7 @@ class Interpolator:
         """
         Perform bicubic interpolation to restore a missing pixel in an image.
         """
+
         def cubic_convolution_coefficient(xx):
             """
             Compute the cubic convolution coefficients for a given distance x.
@@ -81,6 +74,7 @@ class Interpolator:
                 return 4 - 8 * abs_x + 5 * abs_x ** 2 - abs_x ** 3
             else:
                 return 0
+
         # Convert the image to a NumPy array
         original_array = np.copy(img)
         original_array[x][y] = Interpolator.bilinear(img, x, y)
@@ -117,7 +111,7 @@ class Interpolator:
         Z2_green = np.dot(weights_green.T, Z_green)
         Z2_blue = np.dot(weights_blue.T, Z_blue)
 
-        restored_px = [int(Z2_blue)/16, int(Z2_green)/16, int(Z2_red)/16]
+        restored_px = [int(Z2_blue) / 16, int(Z2_green) / 16, int(Z2_red) / 16]
 
         return restored_px
 
@@ -164,7 +158,8 @@ class Interpolator:
 
     @staticmethod
     def calc_dist(bgr1, bgr2):
-        dist = ((int(bgr1[0])-int(bgr2[0]))**2 + (int(bgr1[1])-int(bgr2[1]))**2 + (int(bgr1[2])-int(bgr2[2]))**2)**0.5
+        dist = ((int(bgr1[0]) - int(bgr2[0])) ** 2 + (int(bgr1[1]) - int(bgr2[1])) ** 2 + (
+                int(bgr1[2]) - int(bgr2[2])) ** 2) ** 0.5
         return dist
 
     @staticmethod
@@ -183,31 +178,51 @@ class Interpolator:
 
         distances = []
 
-        distances.append([Interpolator.calc_dist(Z_bgr[0][0], Z_bgr[2][2]), [(int(a)+int(b))/2 for a, b in zip(Z_bgr[0][0], Z_bgr[2][2])]])
-        distances.append([Interpolator.calc_dist(Z_bgr[0][1], Z_bgr[2][1]), [(int(a)+int(b))/2 for a, b in zip(Z_bgr[0][0], Z_bgr[2][2])]])
-        distances.append([Interpolator.calc_dist(Z_bgr[0][2], Z_bgr[2][0]), [(int(a)+int(b))/2 for a, b in zip(Z_bgr[0][0], Z_bgr[2][2])]])
-        distances.append([Interpolator.calc_dist(Z_bgr[1][0], Z_bgr[1][2]), [(int(a)+int(b))/2 for a, b in zip(Z_bgr[0][0], Z_bgr[2][2])]])
+        distances.append([Interpolator.calc_dist(Z_bgr[0][0], Z_bgr[2][2]),
+                          [(int(a) + int(b)) / 2 for a, b in zip(Z_bgr[0][0], Z_bgr[2][2])]])
+        distances.append([Interpolator.calc_dist(Z_bgr[0][1], Z_bgr[2][1]),
+                          [(int(a) + int(b)) / 2 for a, b in zip(Z_bgr[0][0], Z_bgr[2][2])]])
+        distances.append([Interpolator.calc_dist(Z_bgr[0][2], Z_bgr[2][0]),
+                          [(int(a) + int(b)) / 2 for a, b in zip(Z_bgr[0][0], Z_bgr[2][2])]])
+        distances.append([Interpolator.calc_dist(Z_bgr[1][0], Z_bgr[1][2]),
+                          [(int(a) + int(b)) / 2 for a, b in zip(Z_bgr[0][0], Z_bgr[2][2])]])
 
         min_dist = sorted(distances, key=lambda x: x[0])[0]
         return min_dist[1]
 
 
+interpolator = {"nearest_neighbor": {'method': Interpolator.nearest_neighbor, "score": 0},
+                "bilinear": {'method': Interpolator.bilinear, "score": 0},
+                "bicubic": {'method': Interpolator.bicubic, "score": 0},
+                "lanczos": {'method': Interpolator.lanczos, "score": 0},
+                "custom": {'method': Interpolator.custom, "score": 0}}
+
+
 def main():
-    img_name_list = os.listdir(broken_dataset_path)
-    results = {"nearest_neighbor": 0,
-               "bilinear": 0,
-               "bicubic": 0,
-               "lanczos": 0,
-               "custom": 0}
+    for name, method in interpolator.items():
+        proc[name] = 0
+
+    img_name_list = os.listdir(broken_dataset_path)[:]
+
     for img_name in img_name_list:
         try:
             top_methods = Interpolator.compare_fix_methods(img_name)
             for rate, method in enumerate(top_methods):
-                results[method] += rate
+                interpolator[method]['score'] += rate
         except:
             pass
 
-    print(f"\nTOP of methods: {dict(sorted(results.items(), key=lambda x: x[1]))}")
+    top = dict(sorted(interpolator.items(), key=lambda x: x[1]['score']))
+
+    print(f"\nTOP of methods: {[{'name': name, 'score': method['score']} for name, method in top.items()]}")
+
+    total_img_count = len(img_name_list)
+    for pr in proc:
+        proc[pr] = round(1 - (proc[pr]/total_img_count) / 255, 4)
+
+    sort_proc = dict(sorted(proc.items(), key=lambda x: x[1], reverse=True))
+
+    print(sort_proc)
 
 
 if __name__ == '__main__':

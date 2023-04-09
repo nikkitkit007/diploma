@@ -33,6 +33,17 @@ cv::Mat numpy_to_mat(py::array_t<uint8_t>& input) {
 }
 
 
+float get_mean_rate(py::array_t<uint8_t>& imag) {
+    // Load the image
+    Mat img = numpy_to_mat(imag);
+
+    // Calculate the mean and standard deviation of the image
+    Scalar mean, stddev;
+    meanStdDev(img, mean, stddev);
+    return mean[0];
+}
+
+
 py::list z_score_from_image(py::array_t<uint8_t>& imag, double threshold) {
     // Load the image
     Mat img = numpy_to_mat(imag);
@@ -540,6 +551,8 @@ PYBIND11_MODULE(outlier_detector, m) {
         py::arg("matrix"));
     m.def("calculate_map_mehalanobis_distance", &calculate_map_mehalanobis_distance, "Calculate map",
         py::arg("matrix"));
+    m.def("get_mean_rate", &get_mean_rate, "Get mean rate",  py::arg("matrix"));
+
 
 }
 /*

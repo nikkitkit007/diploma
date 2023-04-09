@@ -39,11 +39,11 @@ def heatmap(img):
         cv2.imwrite(str(m) + '_heatmap.png', heatmap)
 
 
-def outliers(img, broken_px):
+def outliers(img, broken_px, percents):
     img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
     for name, method in methods.items():
-        potential_px = get_outliers(img, method['method'], 99)
+        potential_px = get_outliers(img, method['method'], percents)
         if broken_px in potential_px:
             methods[name]['score'] += 1
 
@@ -53,13 +53,22 @@ if __name__ == '__main__':
 
     img_name_list = os.listdir(broken_dataset_path)
     total_img = len(img_name_list)
+    print(f"total_img_count: {total_img}")
+    for i in range(80, 100):
 
-    for img in img_name_list:
-        broken_img = cv2.imread(broken_dataset_path + img)
-        broken_px = find_diff_px(img)
-        outliers(broken_img, broken_px)
+        for img in img_name_list:
+            broken_img = cv2.imread(broken_dataset_path + img)
+            broken_px = find_diff_px(img)
+            outliers(broken_img, broken_px, i)
 
-    print([{'name': name, 'score': round(method['score']/total_img, 4)} for name, method in methods.items()])
+        print(f"i = {i}\n"
+              f"{[{'name': name, 'score': round(method['score']/total_img, 4)} for name, method in methods.items()]}")
+
+        methods = {"mehalanobis": {"score": 0, "method": calculate_map_mehalanobis_distance},
+                   "outlier_detection": {"score": 0, "method": calculate_map_outlier_detection},
+                   "z_score": {"score": 0, "method": calculate_map_z_score},
+                   "histogram": {"score": 0, "method": calculate_map_histogram}}
+
     # img_name = "11774.png"
     # img_name = "12195.png"
     # img_name = "159193.png"
