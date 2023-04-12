@@ -1,4 +1,4 @@
-from typing import NamedTuple, Dict, List
+from typing import Dict, List
 import os
 import cv2
 import time
@@ -53,7 +53,6 @@ def analyze(methods: List[Method], img_names: List[str]):
 
                 dist[method['name']] = method_dist
                 proc[method['name']] += method_dist
-                # time[method['name']]
                 method['time'] += time_finish
 
             dist = dict(sorted(dist.items(), key=lambda x: x[1]))
@@ -76,7 +75,7 @@ def analyze(methods: List[Method], img_names: List[str]):
         method['time'] = round(method['time'] / total_img_count, 10)
 
     for method in methods:
-        method['score'] = method['score'] / 1000
+        method['score'] = method['score']
 
 
 def print_top(data: List[Method], key: str, reverse=False):
@@ -87,7 +86,7 @@ def print_top(data: List[Method], key: str, reverse=False):
 
 
 def main():
-    img_names = os.listdir(broken_dataset_path)[:]
+    img_names = os.listdir(broken_dataset_path)[:None]
 
     fix_methods = inpaint_methods + interpolator_methods
     analyze(methods=fix_methods, img_names=img_names)
