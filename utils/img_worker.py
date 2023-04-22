@@ -1,4 +1,6 @@
 import cv2
+import os
+
 import numpy as np
 from typing import Tuple
 import outlier_detector
@@ -34,12 +36,16 @@ def find_diff_px(img_name: str, show_imgs: bool = False) -> Tuple[int, int]:
     return i, j
 
 
+def get_image_names(path: str, count=None):
+    return os.listdir(path)[:count]
+
+
 if __name__ == '__main__':
     img_name = "1335.png"
     # img_name = "11774.png"
     # img_name = "12195.png"
-    im = cv2.imread(broken_dataset_path+img_name)
+    im = cv2.imread(broken_dataset_path + img_name)
     cv2.imshow("T", im)
     cv2.waitKey(1)
-    res = outlier_detector.z_score(broken_dataset_path+img_name, 3)
+    res = outlier_detector.z_score(broken_dataset_path + img_name, 3)
     print(find_diff_px(img_name))
