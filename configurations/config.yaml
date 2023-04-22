@@ -10,3 +10,4 @@ max_proc: 4
 
 input_dir: images/cifar10/test/
 output_dir: images/output/
+test_output_dir: images/test_dataset/

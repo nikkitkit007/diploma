@@ -11,6 +11,12 @@ def compare(img1, img2):
     return diff
 
 
+def calc_dist(bgr1, bgr2):
+    dist = ((int(bgr1[0]) - int(bgr2[0])) ** 2 + (int(bgr1[1]) - int(bgr2[1])) ** 2 + (
+            int(bgr1[2]) - int(bgr2[2])) ** 2) ** 0.5
+    return dist
+
+
 def find_diff_px(img_name: str, show_imgs: bool = False) -> Tuple[int, int]:
     img_origin = cv2.imread(origin_dataset_path + img_name, flags=cv2.IMREAD_GRAYSCALE)
     img_broken = cv2.imread(broken_dataset_path + img_name, flags=cv2.IMREAD_GRAYSCALE)
@@ -29,7 +35,6 @@ def find_diff_px(img_name: str, show_imgs: bool = False) -> Tuple[int, int]:
 
 
 if __name__ == '__main__':
-    # img_name = str(input())
     img_name = "1335.png"
     # img_name = "11774.png"
     # img_name = "12195.png"

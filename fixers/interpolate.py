@@ -3,7 +3,8 @@ import os
 import cv2
 from configurations import broken_dataset_path, origin_dataset_path
 from utils.img_worker import find_diff_px
-
+from scipy.interpolate import interp2d
+from utils.img_worker import calc_dist
 
 proc = {}
 
@@ -22,17 +23,10 @@ class Interpolator:
 
         dist = {}
         for name, method in interpolator.items():
-            dist[name] = Interpolator.calc_dist(method['method'](broken_img, x, y), bgr_origin)
-            proc[name] += Interpolator.calc_dist(method['method'](broken_img, x, y), bgr_origin)
+            dist[name] = calc_dist(method['method'](broken_img, x, y), bgr_origin)
+            proc[name] += calc_dist(method['method'](broken_img, x, y), bgr_origin)
 
         dist = dict(sorted(dist.items(), key=lambda x: x[1]))
-        # print(f"\n\t<<<<{img_name}>>>>\n"
-        #       f"original px: {bgr_origin}\n"
-        #       f"nearest_neighbor: {interpolator['nearest_neighbor']['method'](broken_img, x, y)}\n"
-        #       f"bilinear: {interpolator['bilinear']['method'](broken_img, x, y)}\n"
-        #       f"bicubic: {interpolator['bicubic']['method'](broken_img, x, y)}\n"
-        #       f"lanczos: {interpolator['lanczos']['method'](broken_img, x, y)}\n"
-        #       f"custom: {interpolator['custom']['method'](broken_img, x, y)}")
 
         return dist
 
@@ -157,12 +151,6 @@ class Interpolator:
         return [round(res, 3) for res in interpolated_pixel]
 
     @staticmethod
-    def calc_dist(bgr1, bgr2):
-        dist = ((int(bgr1[0]) - int(bgr2[0])) ** 2 + (int(bgr1[1]) - int(bgr2[1])) ** 2 + (
-                int(bgr1[2]) - int(bgr2[2])) ** 2) ** 0.5
-        return dist
-
-    @staticmethod
     def custom(img, x: int, y: int):
 
         row_indices = [x - 1, x, x + 1]
@@ -178,17 +166,75 @@ class Interpolator:
 
         distances = []
 
-        distances.append([Interpolator.calc_dist(Z_bgr[0][0], Z_bgr[2][2]),
+        distances.append([calc_dist(Z_bgr[0][0], Z_bgr[2][2]),
                           [(int(a) + int(b)) / 2 for a, b in zip(Z_bgr[0][0], Z_bgr[2][2])]])
-        distances.append([Interpolator.calc_dist(Z_bgr[0][1], Z_bgr[2][1]),
+        distances.append([calc_dist(Z_bgr[0][1], Z_bgr[2][1]),
                           [(int(a) + int(b)) / 2 for a, b in zip(Z_bgr[0][0], Z_bgr[2][2])]])
-        distances.append([Interpolator.calc_dist(Z_bgr[0][2], Z_bgr[2][0]),
+        distances.append([calc_dist(Z_bgr[0][2], Z_bgr[2][0]),
                           [(int(a) + int(b)) / 2 for a, b in zip(Z_bgr[0][0], Z_bgr[2][2])]])
-        distances.append([Interpolator.calc_dist(Z_bgr[1][0], Z_bgr[1][2]),
+        distances.append([calc_dist(Z_bgr[1][0], Z_bgr[1][2]),
                           [(int(a) + int(b)) / 2 for a, b in zip(Z_bgr[0][0], Z_bgr[2][2])]])
 
         min_dist = sorted(distances, key=lambda x: x[0])[0]
         return min_dist[1]
+
+    # @staticmethod
+    # def spline(img, x: int, y: int):
+    #     # Helper function to compute the cubic spline coefficients
+    #     def compute_coefficients(x, y):
+    #         # Compute the second derivatives
+    #         n = len(x)
+    #         A = np.zeros((n, n))
+    #         b = np.zeros(n)
+    #         A[0, 0] = 1
+    #         A[n - 1, n - 1] = 1
+    #         for i in range(1, n - 1):
+    #             h_i = x[i] - x[i - 1]
+    #             h_i1 = x[i + 1] - x[i]
+    #             A[i, i - 1] = h_i
+    #             A[i, i] = 2 * (h_i + h_i1)
+    #             A[i, i + 1] = h_i1
+    #             b[i] = 3 * ((y[i + 1] - y[i]) / h_i1 - (y[i] - y[i - 1]) / h_i)
+    #         # Solve the system of equations to obtain the second derivatives
+    #         c = np.linalg.solve(A, b)
+    #         # Compute the remaining coefficients
+    #         a = y
+    #         b = np.zeros(n - 1)
+    #         d = np.zeros(n - 1)
+    #         for i in range(n - 1):
+    #             h_i = x[i + 1] - x[i]
+    #             b[i] = (a[i + 1] - a[i]) / h_i - h_i * (2 * c[i] + c[i + 1]) / 3
+    #             d[i] = (c[i + 1] - c[i]) / (3 * h_i)
+    #         return a, b, c, d
+    #
+    #     # Helper function to evaluate the cubic spline at a given point
+    #     def evaluate_cubic_spline(x,  y, a, b, c, d, z):
+    #         i = np.searchsorted(x, z) - 1
+    #         h = z - x[i]
+    #         return a[i] + b[i] * h + c[i] * h ** 2 + d[i] * h ** 3
+    #
+    #     neighborhood = img[y - 1:y + 2, x - 1:x + 2]
+    #
+    #     B, G, R = cv2.split(neighborhood)
+    #     x = 1
+    #     y = 1
+    #     # Set the coordinates of the surrounding pixels
+    #     x_coords = np.arange(x - 1, x + 2)
+    #     y_coords = np.arange(y - 1, y + 2)
+    #
+    #     red_coeffs = compute_coefficients(B, neighborhood[:, :, 0].flatten())
+    #     green_coeffs = compute_coefficients(G, neighborhood[:, :, 1].flatten())
+    #     blue_coeffs = compute_coefficients(R, neighborhood[:, :, 2].flatten())
+    #
+    #     # Estimate the missing pixel value for each color channel
+    #     dx = 0.5
+    #     dy = 0.5
+    #     restored_red = evaluate_cubic_spline(B, neighborhood[:, :, 0].flatten(), *red_coeffs, x + dx)
+    #     restored_green = evaluate_cubic_spline(G, neighborhood[:, :, 1].flatten(), *green_coeffs, x + dx)
+    #     restored_blue = evaluate_cubic_spline(R, neighborhood[:, :, 2].flatten(), *blue_coeffs, x + dx)
+    #     restored_pixel = [restored_red, restored_green, restored_blue]
+    #     print(f"spline: {restored_pixel}")
+    #     return restored_pixel
 
 
 interpolator = {"nearest_neighbor": {'method': Interpolator.nearest_neighbor, "score": 0},

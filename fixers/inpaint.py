@@ -1,5 +1,4 @@
 import cv2
-from typing import List
 import os
 from configurations import broken_dataset_path, origin_dataset_path
 from utils.img_worker import find_diff_px
@@ -26,12 +25,6 @@ class Inpainter:
         inpaint = cv2.inpaint(img, mask, 3, cv2.INPAINT_TELEA)
 
         return inpaint[x][y]
-
-    @staticmethod
-    def calc_dist(bgr1, bgr2):
-        dist = ((int(bgr1[0]) - int(bgr2[0])) ** 2 + (int(bgr1[1]) - int(bgr2[1])) ** 2 + (
-                int(bgr1[2]) - int(bgr2[2])) ** 2) ** 0.5
-        return dist
 
 
 def main():

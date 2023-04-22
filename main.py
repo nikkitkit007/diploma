@@ -6,6 +6,7 @@ from utils.img_worker import find_diff_px
 from utils.heatmap import get_heatmap, get_outliers
 from configurations import broken_dataset_path, origin_dataset_path
 import fixers.interpolate as interpolate
+from utils.broken_dataset_creator import create_test_dataset
 
 methods = {"mehalanobis": {"score": 0, "method": calculate_map_mehalanobis_distance},
            "outlier_detection": {"score": 0, "method": calculate_map_outlier_detection},
@@ -50,24 +51,24 @@ def outliers(img, broken_px, percents):
 
 if __name__ == '__main__':
     # interpolate.main()          # run interpolate funcs to calculate statistic
-
-    img_name_list = os.listdir(broken_dataset_path)
-    total_img = len(img_name_list)
-    print(f"total_img_count: {total_img}")
-    for i in range(80, 100):
-
-        for img in img_name_list:
-            broken_img = cv2.imread(broken_dataset_path + img)
-            broken_px = find_diff_px(img)
-            outliers(broken_img, broken_px, i)
-
-        print(f"i = {i}\n"
-              f"{[{'name': name, 'score': round(method['score']/total_img, 4)} for name, method in methods.items()]}")
-
-        methods = {"mehalanobis": {"score": 0, "method": calculate_map_mehalanobis_distance},
-                   "outlier_detection": {"score": 0, "method": calculate_map_outlier_detection},
-                   "z_score": {"score": 0, "method": calculate_map_z_score},
-                   "histogram": {"score": 0, "method": calculate_map_histogram}}
+    # create_test_dataset()
+    # img_name_list = os.listdir(broken_dataset_path)
+    # total_img = len(img_name_list)
+    # print(f"total_img_count: {total_img}")
+    # for i in range(80, 100):
+    #
+    #     for img in img_name_list:
+    #         broken_img = cv2.imread(broken_dataset_path + img)
+    #         broken_px = find_diff_px(img)
+    #         outliers(broken_img, broken_px, i)
+    #
+    #     print(f"i = {i}\n"
+    #           f"{[{'name': name, 'score': round(method['score']/total_img, 4)} for name, method in methods.items()]}")
+    #
+    #     methods = {"mehalanobis": {"score": 0, "method": calculate_map_mehalanobis_distance},
+    #                "outlier_detection": {"score": 0, "method": calculate_map_outlier_detection},
+    #                "z_score": {"score": 0, "method": calculate_map_z_score},
+    #                "histogram": {"score": 0, "method": calculate_map_histogram}}
 
     # img_name = "11774.png"
     # img_name = "12195.png"
@@ -84,3 +85,4 @@ if __name__ == '__main__':
     # # print(mean)
     # # res = outlier_detector.z_score(broken_dataset_path + img_name, mean)
     # # print(res)
+    pass

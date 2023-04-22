@@ -8,6 +8,9 @@ from utils.img_worker import find_diff_px
 
 from fixers.inpaint import Inpainter
 from fixers.interpolate import Interpolator
+from fixers.other import Other
+
+from utils.img_worker import calc_dist
 
 
 class Method(Dict):
@@ -29,6 +32,8 @@ inpaint_methods = [Method(name="navier_stokes", call=Inpainter.navier_stokes, sc
                    Method(name="telea", call=Inpainter.telea, score=0, quality=0, time=0), ]
 
 
+other_method = [Method(name='gauss_blur', call=Other.gauss_blur, score=0, quality=0, time=0), ]
+
 proc = {}
 
 
@@ -48,7 +53,7 @@ def analyze(methods: List[Method], img_names: List[str]):
         try:
             for method in methods:
                 time_start = time.time()
-                method_dist = Interpolator.calc_dist(method['call'](broken_img, x, y), bgr_origin)
+                method_dist = calc_dist(method['call'](broken_img, x, y), bgr_origin)
                 time_finish = time.time() - time_start
 
                 dist[method['name']] = method_dist
@@ -88,7 +93,8 @@ def print_top(data: List[Method], key: str, reverse=False):
 def main():
     img_names = os.listdir(broken_dataset_path)[:None]
 
-    fix_methods = inpaint_methods + interpolator_methods
+    fix_methods = inpaint_methods + interpolator_methods + other_method
+
     analyze(methods=fix_methods, img_names=img_names)
 
     # -----------------------top score--------------------------
