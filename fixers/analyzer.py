@@ -3,7 +3,7 @@ import os
 import cv2
 import time
 
-from configurations import broken_dataset_path, origin_dataset_path
+from configurations import broken_dataset_path, origin_dataset_path, test_dataset_path
 from utils.img_worker import find_diff_px
 
 from fixers.inpaint import Inpainter
@@ -37,17 +37,18 @@ other_method = [Method(name='gauss_blur', call=Other.gauss_blur, score=0, qualit
 proc = {}
 
 
-def analyze(methods: List[Method], img_names: List[str]):
+def analyze(methods: List[Method], img_names: List[str],
+            origin_dataset: str = origin_dataset_path,
+            broken_dataset: str = broken_dataset_path,):
     for method in methods:
         proc[method['name']] = 0
 
     for img_name in img_names:
-        broken_img = cv2.imread(broken_dataset_path + img_name)
-        origin_img = cv2.imread(origin_dataset_path + img_name)
+        broken_img = cv2.imread(origin_dataset + img_name)
+        origin_img = cv2.imread(broken_dataset + img_name)
 
-        x, y = find_diff_px(img_name)
+        x, y = find_diff_px(img_name, dataset_1=origin_dataset, dataset_2=broken_dataset)
         bgr_origin = origin_img[x][y]  # BGR (b, g, r)
-        bgr_broken = broken_img[x][y]  # BGR (b, g, r)
 
         dist = {}
         try:
@@ -65,22 +66,22 @@ def analyze(methods: List[Method], img_names: List[str]):
             for i, d in enumerate(dist):
                 dist_rating[d] = i
             for rate, method in enumerate(methods):
-                method['score'] += len(methods) - dist_rating[method['name']]
+                method['score'] += dist_rating[method['name']]
         except:
             pass
 
     total_img_count = len(img_names)
     for pr in proc:
-        proc[pr] = round(1 - (proc[pr] / total_img_count) / 255, 4)
+        proc[pr] = round(1 - (proc[pr] / total_img_count) / (255**2 * 3)**0.5, 4)
 
     for method in methods:
         method['quality'] += proc[method['name']]
 
     for method in methods:
-        method['time'] = round(method['time'] / total_img_count, 10)
+        method['time'] = round((method['time'] / total_img_count) * 1000, 10)
 
     for method in methods:
-        method['score'] = method['score']
+        method['score'] = round(method['score'] / total_img_count, 4)
 
 
 def print_top(data: List[Method], key: str, reverse=False):
@@ -92,13 +93,15 @@ def print_top(data: List[Method], key: str, reverse=False):
 
 def main():
     img_names = os.listdir(broken_dataset_path)[:None]
+    # img_names = os.listdir(test_dataset_path)[:None]
 
     fix_methods = inpaint_methods + interpolator_methods + other_method
 
-    analyze(methods=fix_methods, img_names=img_names)
+    analyze(methods=fix_methods, img_names=img_names,
+            origin_dataset=origin_dataset_path, broken_dataset=test_dataset_path)
 
     # -----------------------top score--------------------------
-    print_top(data=fix_methods, key='score', reverse=True)
+    print_top(data=fix_methods, key='score', reverse=False)
 
     # ----------------------top quality-------------------------
     print_top(data=fix_methods, key='quality', reverse=True)

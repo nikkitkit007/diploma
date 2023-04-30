@@ -19,9 +19,10 @@ def calc_dist(bgr1, bgr2):
     return dist
 
 
-def find_diff_px(img_name: str, show_imgs: bool = False) -> Tuple[int, int]:
-    img_origin = cv2.imread(origin_dataset_path + img_name, flags=cv2.IMREAD_GRAYSCALE)
-    img_broken = cv2.imread(broken_dataset_path + img_name, flags=cv2.IMREAD_GRAYSCALE)
+def find_diff_px(img_name: str, dataset_1: str = origin_dataset_path, dataset_2: str = broken_dataset_path,
+                 show_imgs: bool = False) -> Tuple[int, int]:
+    img_origin = cv2.imread(dataset_1 + img_name, flags=cv2.IMREAD_GRAYSCALE)
+    img_broken = cv2.imread(dataset_2 + img_name, flags=cv2.IMREAD_GRAYSCALE)
 
     compared_pictures = compare(img_origin, img_broken)
 
