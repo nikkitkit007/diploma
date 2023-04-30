@@ -51,7 +51,7 @@ def get_outliers(matrix, method, percentile):
         outliers = np.column_stack((indices[0], indices[1]))
         return outliers
     else:
-        return []
+        return np.array([])
 
 
 def get_heatmap(matrix, method):
