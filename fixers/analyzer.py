@@ -24,8 +24,7 @@ class Method(Dict):
 interpolator_methods = [Method(name="nearest_neighbor", call=Interpolator.nearest_neighbor, score=0, quality=0, time=0),
                         Method(name="bilinear", call=Interpolator.bilinear, score=0, quality=0, time=0),
                         Method(name="bicubic", call=Interpolator.bicubic, score=0, quality=0, time=0),
-                        Method(name="lanczos", call=Interpolator.lanczos, score=0, quality=0, time=0),
-                        Method(name="custom", call=Interpolator.custom, score=0, quality=0, time=0), ]
+                        Method(name="lanczos", call=Interpolator.lanczos, score=0, quality=0, time=0), ]
 
 
 inpaint_methods = [Method(name="navier_stokes", call=Inpainter.navier_stokes, score=0, quality=0, time=0),
@@ -91,14 +90,13 @@ def print_top(data: List[Method], key: str, reverse=False):
         print(f"{method['name']} - {method[key]}")
 
 
-def main():
-    # img_names = os.listdir(Datasets.broken)[:None]
-    img_names = os.listdir(Datasets.test)[:None]
+def main(test_dataset: str = Datasets.broken):
+    img_names = os.listdir(test_dataset)[:None]
 
     fix_methods = inpaint_methods + interpolator_methods + other_method
 
     analyze(methods=fix_methods, img_names=img_names,
-            origin_dataset=Datasets.origin, broken_dataset=Datasets.test)
+            origin_dataset=Datasets.origin, broken_dataset=test_dataset)
 
     # -----------------------top score--------------------------
     print_top(data=fix_methods, key='score', reverse=False)
