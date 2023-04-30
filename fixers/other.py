@@ -1,10 +1,8 @@
 import cv2
-from typing import List
 import os
-from configurations import broken_dataset_path, origin_dataset_path
+from configurations import Datasets
 from utils.img_worker import find_diff_px
 from scipy.fftpack import fft2, ifft2, fftshift, ifftshift
-from skimage.restoration import denoise_nl_means, estimate_sigma
 
 import numpy as np
 
@@ -12,7 +10,7 @@ import numpy as np
 class Other:
 
     @staticmethod
-    def gauss_blur(img, x: int, y: int):        # todo read about this method
+    def gauss_blur(img, x: int, y: int):
 
         filtered_img = cv2.GaussianBlur(img, (3, 3), 2.0)
         return filtered_img[x][y]
@@ -44,20 +42,18 @@ class Other:
 
 
 def main():
-    img_name_list = os.listdir(broken_dataset_path)[:3]
+    img_name_list = os.listdir(Datasets.broken)[:2]
 
     for img_name in img_name_list:
-        broken_img = cv2.imread(broken_dataset_path + img_name)
-        origin_img = cv2.imread(origin_dataset_path + img_name)
+        broken_img = cv2.imread(Datasets.broken + img_name)
+        origin_img = cv2.imread(Datasets.origin + img_name)
 
         x, y = find_diff_px(img_name)
         bgr_origin = origin_img[x][y]  # BGR (b, g, r)
-        bgr_broken = broken_img[x][y]  # BGR (b, g, r)
 
         print(f'origin: {bgr_origin}')
-        # res = Other.gauss_blur(origin_img, x, y)
-        res = Other.gauss_blur(origin_img, x, y)
-        print(f"result: {res} \n")
+        res = Other.gauss_blur(broken_img, x, y)
+        print(res, '\n')
 
 
 if __name__ == "__main__":

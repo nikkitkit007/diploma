@@ -1,7 +1,7 @@
 import numpy as np
 import os
 import cv2
-from configurations import broken_dataset_path, origin_dataset_path
+from configurations import Datasets
 from utils.img_worker import find_diff_px
 from scipy.interpolate import interp2d
 from utils.img_worker import calc_dist
@@ -10,25 +10,6 @@ proc = {}
 
 
 class Interpolator:
-    # todo make all combinations
-
-    @staticmethod
-    def compare_fix_methods(img_name):
-        broken_img = cv2.imread(broken_dataset_path + img_name)
-        origin_img = cv2.imread(origin_dataset_path + img_name)
-
-        x, y = find_diff_px(img_name)
-        bgr_origin = origin_img[x][y]  # BGR (b, g, r)
-        bgr_broken = broken_img[x][y]  # BGR (b, g, r)
-
-        dist = {}
-        for name, method in interpolator.items():
-            dist[name] = calc_dist(method['method'](broken_img, x, y), bgr_origin)
-            proc[name] += calc_dist(method['method'](broken_img, x, y), bgr_origin)
-
-        dist = dict(sorted(dist.items(), key=lambda x: x[1]))
-
-        return dist
 
     @staticmethod
     def nearest_neighbor(img, x: int, y: int) -> list:
@@ -178,64 +159,6 @@ class Interpolator:
         min_dist = sorted(distances, key=lambda x: x[0])[0]
         return min_dist[1]
 
-    # @staticmethod
-    # def spline(img, x: int, y: int):
-    #     # Helper function to compute the cubic spline coefficients
-    #     def compute_coefficients(x, y):
-    #         # Compute the second derivatives
-    #         n = len(x)
-    #         A = np.zeros((n, n))
-    #         b = np.zeros(n)
-    #         A[0, 0] = 1
-    #         A[n - 1, n - 1] = 1
-    #         for i in range(1, n - 1):
-    #             h_i = x[i] - x[i - 1]
-    #             h_i1 = x[i + 1] - x[i]
-    #             A[i, i - 1] = h_i
-    #             A[i, i] = 2 * (h_i + h_i1)
-    #             A[i, i + 1] = h_i1
-    #             b[i] = 3 * ((y[i + 1] - y[i]) / h_i1 - (y[i] - y[i - 1]) / h_i)
-    #         # Solve the system of equations to obtain the second derivatives
-    #         c = np.linalg.solve(A, b)
-    #         # Compute the remaining coefficients
-    #         a = y
-    #         b = np.zeros(n - 1)
-    #         d = np.zeros(n - 1)
-    #         for i in range(n - 1):
-    #             h_i = x[i + 1] - x[i]
-    #             b[i] = (a[i + 1] - a[i]) / h_i - h_i * (2 * c[i] + c[i + 1]) / 3
-    #             d[i] = (c[i + 1] - c[i]) / (3 * h_i)
-    #         return a, b, c, d
-    #
-    #     # Helper function to evaluate the cubic spline at a given point
-    #     def evaluate_cubic_spline(x,  y, a, b, c, d, z):
-    #         i = np.searchsorted(x, z) - 1
-    #         h = z - x[i]
-    #         return a[i] + b[i] * h + c[i] * h ** 2 + d[i] * h ** 3
-    #
-    #     neighborhood = img[y - 1:y + 2, x - 1:x + 2]
-    #
-    #     B, G, R = cv2.split(neighborhood)
-    #     x = 1
-    #     y = 1
-    #     # Set the coordinates of the surrounding pixels
-    #     x_coords = np.arange(x - 1, x + 2)
-    #     y_coords = np.arange(y - 1, y + 2)
-    #
-    #     red_coeffs = compute_coefficients(B, neighborhood[:, :, 0].flatten())
-    #     green_coeffs = compute_coefficients(G, neighborhood[:, :, 1].flatten())
-    #     blue_coeffs = compute_coefficients(R, neighborhood[:, :, 2].flatten())
-    #
-    #     # Estimate the missing pixel value for each color channel
-    #     dx = 0.5
-    #     dy = 0.5
-    #     restored_red = evaluate_cubic_spline(B, neighborhood[:, :, 0].flatten(), *red_coeffs, x + dx)
-    #     restored_green = evaluate_cubic_spline(G, neighborhood[:, :, 1].flatten(), *green_coeffs, x + dx)
-    #     restored_blue = evaluate_cubic_spline(R, neighborhood[:, :, 2].flatten(), *blue_coeffs, x + dx)
-    #     restored_pixel = [restored_red, restored_green, restored_blue]
-    #     print(f"spline: {restored_pixel}")
-    #     return restored_pixel
-
 
 interpolator = {"nearest_neighbor": {'method': Interpolator.nearest_neighbor, "score": 0},
                 "bilinear": {'method': Interpolator.bilinear, "score": 0},
@@ -248,27 +171,18 @@ def main():
     for name, method in interpolator.items():
         proc[name] = 0
 
-    img_name_list = os.listdir(broken_dataset_path)[:]
+    img_name_list = os.listdir(Datasets.broken)[:2]
 
     for img_name in img_name_list:
-        try:
-            top_methods = Interpolator.compare_fix_methods(img_name)
-            for rate, method in enumerate(top_methods):
-                interpolator[method]['score'] += rate
-        except:
-            pass
+        broken_img = cv2.imread(Datasets.broken + img_name)
+        origin_img = cv2.imread(Datasets.origin + img_name)
 
-    top = dict(sorted(interpolator.items(), key=lambda x: x[1]['score']))
+        x, y = find_diff_px(img_name)
+        bgr_origin = origin_img[x][y]  # BGR (b, g, r)
 
-    print(f"\nTOP of methods: {[{'name': name, 'score': method['score']} for name, method in top.items()]}")
-
-    total_img_count = len(img_name_list)
-    for pr in proc:
-        proc[pr] = round(1 - (proc[pr]/total_img_count) / 255, 4)
-
-    sort_proc = dict(sorted(proc.items(), key=lambda x: x[1], reverse=True))
-
-    print(sort_proc)
+        print(f'origin: {bgr_origin}')
+        res = Interpolator.bilinear(origin_img, x, y)
+        print(res, '\n')
 
 
 if __name__ == '__main__':

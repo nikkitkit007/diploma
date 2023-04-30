@@ -3,7 +3,7 @@ import os
 import cv2
 import time
 
-from configurations import broken_dataset_path, origin_dataset_path, test_dataset_path
+from configurations import Datasets
 from utils.img_worker import find_diff_px
 
 from fixers.inpaint import Inpainter
@@ -38,14 +38,14 @@ proc = {}
 
 
 def analyze(methods: List[Method], img_names: List[str],
-            origin_dataset: str = origin_dataset_path,
-            broken_dataset: str = broken_dataset_path,):
+            origin_dataset: str = Datasets.origin,
+            broken_dataset: str = Datasets.broken,):
     for method in methods:
         proc[method['name']] = 0
 
     for img_name in img_names:
-        broken_img = cv2.imread(origin_dataset + img_name)
-        origin_img = cv2.imread(broken_dataset + img_name)
+        broken_img = cv2.imread(broken_dataset + img_name)
+        origin_img = cv2.imread(origin_dataset + img_name)
 
         x, y = find_diff_px(img_name, dataset_1=origin_dataset, dataset_2=broken_dataset)
         bgr_origin = origin_img[x][y]  # BGR (b, g, r)
@@ -92,13 +92,13 @@ def print_top(data: List[Method], key: str, reverse=False):
 
 
 def main():
-    img_names = os.listdir(broken_dataset_path)[:None]
-    # img_names = os.listdir(test_dataset_path)[:None]
+    # img_names = os.listdir(Datasets.broken)[:None]
+    img_names = os.listdir(Datasets.test)[:None]
 
     fix_methods = inpaint_methods + interpolator_methods + other_method
 
     analyze(methods=fix_methods, img_names=img_names,
-            origin_dataset=origin_dataset_path, broken_dataset=test_dataset_path)
+            origin_dataset=Datasets.origin, broken_dataset=Datasets.test)
 
     # -----------------------top score--------------------------
     print_top(data=fix_methods, key='score', reverse=False)

@@ -5,7 +5,7 @@ import numpy as np
 from typing import Tuple
 import outlier_detector
 
-from configurations import broken_dataset_path, origin_dataset_path
+from configurations import Datasets
 
 
 def compare(img1, img2):
@@ -19,7 +19,7 @@ def calc_dist(bgr1, bgr2):
     return dist
 
 
-def find_diff_px(img_name: str, dataset_1: str = origin_dataset_path, dataset_2: str = broken_dataset_path,
+def find_diff_px(img_name: str, dataset_1: str = Datasets.origin, dataset_2: str = Datasets.broken,
                  show_imgs: bool = False) -> Tuple[int, int]:
     img_origin = cv2.imread(dataset_1 + img_name, flags=cv2.IMREAD_GRAYSCALE)
     img_broken = cv2.imread(dataset_2 + img_name, flags=cv2.IMREAD_GRAYSCALE)

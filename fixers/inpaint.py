@@ -1,6 +1,6 @@
 import cv2
 import os
-from configurations import broken_dataset_path, origin_dataset_path
+from configurations import Datasets
 from utils.img_worker import find_diff_px
 
 import numpy as np
@@ -28,19 +28,18 @@ class Inpainter:
 
 
 def main():
-    img_name_list = os.listdir(broken_dataset_path)[:2]
+    img_name_list = os.listdir(Datasets.broken)[:2]
 
     for img_name in img_name_list:
-        broken_img = cv2.imread(broken_dataset_path + img_name)
-        origin_img = cv2.imread(origin_dataset_path + img_name)
+        broken_img = cv2.imread(Datasets.broken + img_name)
+        origin_img = cv2.imread(Datasets.origin + img_name)
 
         x, y = find_diff_px(img_name)
         bgr_origin = origin_img[x][y]  # BGR (b, g, r)
-        bgr_broken = broken_img[x][y]  # BGR (b, g, r)
 
         print(f'origin: {bgr_origin}')
         res = Inpainter.telea(origin_img, x, y)
-        # res = Inpainter.navier_stokes(origin_img, x, y)
+
         print(res, '\n')
 
 
